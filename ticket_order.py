@@ -223,11 +223,12 @@ class Concert(object):
                 seatbuyerxpath = '//div[@id="seatBox"]' #找到整个座位表
                 try:
                     seat = WebDriverWait(self.driver, self.total_wait_short, self.refresh_wait_short).until(
-                                        EC.presence_of_element_located((By.XPATH, seatbuyerxpath)))
+                                        EC.presence_of_element_located((By.XPATH, '//li[@style="color: rgb(245, 104, 61);"]')))
 
                     # find seat available + related color
                     
-                    seat_list = self.driver.find_elements(By.XPATH, '//*[@class="seat-item"]' and '//*[@class="iconfont"]' and '//li[@class!="unavailable"]')#  and f'//li[@style="color: rgb({self.price_color_list[self.price-1]});"]') 
+                    # seat_list = self.driver.find_elements(By.XPATH, '//li[@class="iconfont"]' and '//li[@class!="unavailable"]')#  and f'//li[@style="color: rgb({self.price_color_list[self.price-1]});"]') 
+                    seat_list = self.driver.find_elements(By.XPATH, '//li[@style="color: rgb(245, 104, 61);"]')
                     print(f'=> 可选位置个数 {len(seat_list)}')
                     # print(f'=> 可选位置个数 {len(seat_list)} {datetime.datetime.now()}')
                     if len(seat_list) == 0:
@@ -247,6 +248,7 @@ class Concert(object):
             """ Lock seat """
             # random.shuffle(seat_list)
             for seat in seat_list:
+                print('座位表长度 = %d', len(seat_list))
                 if len(seat.get_attribute('title'))>0:
                     seatid = seat.get_attribute('title')
                     
@@ -286,16 +288,17 @@ class Concert(object):
             while buy_but_idx < self.num_click_checkout and self.driver.title.find('确认订单') == -1:
                 buy_but_idx += 1         
                 try:
-                    # WebDriverWait(self.driver, 3,0.1).until(EC.visibility_of_element_located((By.XPATH,'//span[contains(text(),"结账")]')))
-                    # checkout_but = self.driver.find_element(By.XPATH,'//span[contains(text(),"结账")]').click()
-                    checkout_but = self.driver.find_element(By.XPATH, '//div[@class="cart-bottom"]/button/span').click()
+                    # 这里需要添加一个element_to_be_clickable来检测这个按钮是否可以点击了，很快的！
+                    WebDriverWait(self.driver, 3, 0.3).until(EC.element_to_be_clickable((By.XPATH, '//*[@class="cart-bottom el-row"]/button/span')))
+                    print("输出文本 = " + self.driver.find_element(By.XPATH, '//*[@class="cart-bottom el-row"]/button/span').text)
+                    checkout_but = self.driver.find_element(By.XPATH, '//*[@class="cart-bottom el-row"]/button/span').click()
                     print(f'=> 点击结账 {buy_but_idx}')
 
                     # 检测温馨提示
-                    # if self.need_click:
+                    if self.need_click:
                     # WebDriverWait(self.driver, 5, 0.2).until(EC.text_to_be_present_in_element((By.XPATH, '//span[contains(text(),"继续购买")]'),"继续购买"))
-                    self.driver.find_element(By.XPATH, '//span[contains(text(),"继续购买")]').click()
-                    print(f'-----> 点击 继续购买 {datetime.datetime.now()}')
+                        self.driver.find_element(By.XPATH, '//span[contains(text(),"继续购买")]').click()
+                        print(f'-----> 点击 继续购买 {datetime.datetime.now()}')
                 except:
                     print(buy_but_idx)
                     pass
@@ -354,7 +357,7 @@ class Concert(object):
             while click_nums > 0 and self.driver.title.find('订单支付') == -1:
                 click_nums = click_nums - 1
                 try:
-                    pay_confirm = self.driver.find_element(By.CLASS_NAME, "pay-confirm").click()
+                    # pay_confirm = self.driver.find_element(By.CLASS_NAME, "pay-confirm").click() #关闭支付，正常购买需要打开
                     print(f'成功点击支付 {click_nums}')
                 except:
                     print(click_nums)
