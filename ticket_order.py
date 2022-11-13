@@ -24,11 +24,11 @@ import random
 # target_url = 'https://www.polyt.cn/#/detail?productId=4724800'
 #
 # 日出
-# target_url = 'https://www.polyt.cn/#/detail?productId=4294100' 
+target_url = 'https://www.polyt.cn/#/detail?productId=4294100' 
 
 # 猫 有滑块
 # target_url = 'https://www.polyt.cn/#/detail?productId=2009300'
-target_url = 'https://www.polyt.cn/#/detail?productId=4836300'
+# target_url = 'https://www.polyt.cn/#/detail?productId=4836300'
 # target_url = 'https://www.polyt.cn/#/detail?productId=4825100'
 
 
@@ -173,7 +173,7 @@ class Concert(object):
         print(f"=> 日期选择成功 {datetime.datetime.now()}")
 
     
-    # 读取座位种类
+    # 读取座位种类,要修改为随档数来
     def check_price_list(self):
         print("="*30)
         print(f"=> 查看座位种数 {datetime.datetime.now()}")
@@ -190,8 +190,6 @@ class Concert(object):
 
             self.price_color_list = []
             for botLeft in botLeft_list:
-                # seattype = self.driver.find_element(By.CLASS_NAME,'font-bold').text
-                # seatprice = botLeft.find_element(By.CLASS_NAME,'price-amount').text
                 seatcolor = botLeft.find_element(By.CLASS_NAME,'price-color').get_attribute('style')
 
                 p1 = re.compile(r'[(](.*?)[)]', re.S)
@@ -203,9 +201,6 @@ class Concert(object):
                 self.driver.refresh()
                 continue
 
-            # 选择第一档的票
-            # if self.price > len(self.price_color_list):
-            #     self.price = 1
             break
 
 
@@ -218,21 +213,14 @@ class Concert(object):
             while True:  #当中有耗时的查找座位表动作，用true循环查到再进下一步
                 seatbuyerxpath = '//div[@id="seatBox"]' #找到整个座位表
                 try:
-                    seat = WebDriverWait(self.driver, self.total_wait_short, self.refresh_wait_short).until(
-                                        EC.presence_of_element_located((By.XPATH, '//li[@style="color: rgb(245, 104, 61);"]')))
-
-                    # find seat available + related color
-                    
-                    # seat_list = self.driver.find_elements(By.XPATH, '//li[@class="iconfont"]' and '//li[@class!="unavailable"]')#  and f'//li[@style="color: rgb({self.price_color_list[self.price-1]});"]') 
-                    seat_list = self.driver.find_elements(By.XPATH, '//li[@style="color: rgb(245, 104, 61);"]')
+                    WebDriverWait(self.driver, 3, 0.1).until(EC.presence_of_element_located((By.XPATH, seatbuyerxpath)))
+                    # 通过去除灰色来找位置
+                    seat_list = []
+                    for id in self.price:
+                        seat_list = seat_list + self.driver.find_elements(By.XPATH, f'//li[@style="color: rgb({self.price_color_list[id - 1]});"]')
                     print(f'=> 可选位置个数 {len(seat_list)}')
-                    # print(f'=> 可选位置个数 {len(seat_list)} {datetime.datetime.now()}')
                     if len(seat_list) == 0:
-                        time.sleep(10)
                         self.driver.refresh()
-                    # if len(seat_list) >0:
-                    #     for seat in seat_list:
-                    #         print(seat.get_attribute('title'))
                 except Exception as e:
                     print('找不到位置信息，刷新网页')
                     self.driver.refresh()
@@ -243,24 +231,22 @@ class Concert(object):
 
             """ Lock seat """
             # random.shuffle(seat_list)
+            count = 0
             for seat in seat_list:
-                print('座位表长度 = %d', len(seat_list))
                 if len(seat.get_attribute('title'))>0:
                     seatid = seat.get_attribute('title')
-                    
+
                     if '实名购票' in seatid:
                         self.need_click = True
                         print('##### 需要点击继续购买')
 
                     try:
-                        # if 'xuanzhong' in seat.get_attribute('class'):
-                        #     seat.click()
-                        #     print('=> 选择座位 ' + seatid)
-                        # else:
-                        #     print('=> 已选' + seatid + '')
+                        #这里的逻辑，点不了就跑下一个去点！
                         seat.click()
                         print('=> 选择座位 ' + seatid)
+                        count = count + 1
                     except:
+                        print(f"选座位循环次数 = {count}")
                         continue
 
                     break
@@ -372,7 +358,6 @@ if __name__ == '__main__':
 
     start_time = time.time()
     con = Concert()             #具体如果填写请查看类中的初始化函数
-    # con.driver.get(target_url)
     con.prepare()               #判别是否进入了售票页面，
     # con.login()                 #登录
     con.choose_ticket()
