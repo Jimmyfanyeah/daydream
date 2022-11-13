@@ -28,8 +28,8 @@ import random
 
 # 猫 有滑块
 # target_url = 'https://www.polyt.cn/#/detail?productId=2009300'
-# target_url = 'https://www.polyt.cn/#/detail?productId=4836300'
-target_url = 'https://www.polyt.cn/#/detail?productId=4825100'
+target_url = 'https://www.polyt.cn/#/detail?productId=4836300'
+# target_url = 'https://www.polyt.cn/#/detail?productId=4825100'
 
 
 # 即将开票
@@ -153,8 +153,8 @@ class Concert(object):
         while self.driver.title.find('选择座位') == -1 or len(self.driver.find_elements(By.XPATH, "//span[contains(text(),'选座购买')]"))>0: # 如果跳转到了订单结算界面就算这步成功了，否则继续执行此步
             try:
                 WebDriverWait(self.driver, self.total_wait_time, self.refresh_wait_time).until(
-                            EC.presence_of_element_located((By.XPATH,"//*[contains(text(),'月')]")))
-                choiceTime_list = self.driver.find_elements(By.XPATH,"//*[contains(text(),'月')]")
+                            EC.presence_of_element_located((By.XPATH,"//*[contains(text(),'星期')]")))
+                choiceTime_list = self.driver.find_elements(By.XPATH,"//*[contains(text(),'星期')]")
                 # for choiceTime in choiceTime_list:
                 #     print(choiceTime.text)
 
@@ -208,8 +208,8 @@ class Concert(object):
                 continue
 
             # 选择第一档的票
-            if self.price > len(self.price_color_list):
-                self.price = 1
+            # if self.price > len(self.price_color_list):
+            #     self.price = 1
             break
 
 
@@ -227,7 +227,7 @@ class Concert(object):
 
                     # find seat available + related color
                     
-                    seat_list = self.driver.find_elements(By.XPATH, '//*[@class="seat-item"]' and '//*[@class="iconfont"]' and '//li[@class!="unavailable"]')#  and f'//li[@style="color: rgb({self.price_color_list[self.price-1]});"]')
+                    seat_list = self.driver.find_elements(By.XPATH, '//*[@class="seat-item"]' and '//*[@class="iconfont"]' and '//li[@class!="unavailable"]')#  and f'//li[@style="color: rgb({self.price_color_list[self.price-1]});"]') 
                     print(f'=> 可选位置个数 {len(seat_list)}')
                     # print(f'=> 可选位置个数 {len(seat_list)} {datetime.datetime.now()}')
                     if len(seat_list) == 0:
@@ -255,11 +255,13 @@ class Concert(object):
                         print('##### 需要点击继续购买')
 
                     try:
-                        if 'xuanzhong' in seat.get_attribute('class'):
-                            seat.click()
-                            print('=> 选择座位 ' + seatid)
-                        else:
-                            print('=> 已选' + seatid)
+                        # if 'xuanzhong' in seat.get_attribute('class'):
+                        #     seat.click()
+                        #     print('=> 选择座位 ' + seatid)
+                        # else:
+                        #     print('=> 已选' + seatid + '')
+                        seat.click()
+                        print('=> 选择座位 ' + seatid)
                     except:
                         continue
 
@@ -285,7 +287,8 @@ class Concert(object):
                 buy_but_idx += 1         
                 try:
                     # WebDriverWait(self.driver, 3,0.1).until(EC.visibility_of_element_located((By.XPATH,'//span[contains(text(),"结账")]')))
-                    checkout_but = self.driver.find_element(By.XPATH,'//span[contains(text(),"结账")]').click()
+                    # checkout_but = self.driver.find_element(By.XPATH,'//span[contains(text(),"结账")]').click()
+                    checkout_but = self.driver.find_element(By.XPATH, '//div[@class="cart-bottom"]/button/span').click()
                     print(f'=> 点击结账 {buy_but_idx}')
 
                     # 检测温馨提示
