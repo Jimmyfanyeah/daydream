@@ -1,4 +1,5 @@
 from selenium import webdriver
+import chromedriver_autoinstaller
 from selenium.webdriver.chrome.options import Options
 import re
 import time
@@ -11,37 +12,25 @@ from selenium.webdriver.chrome.service import Service
 import datetime
 import random
 
-
-# 抢票目标页
-# target_url="https://www.polyt.cn/#/detail?productId=4766000"
-
-# 王者荣耀
-# target_url="https://www.polyt.cn/#/detail?productId=4708600" 
-
-# 矛盾
-# price = 5
-# 人世间
-# target_url = 'https://www.polyt.cn/#/detail?productId=4398400' 
-
-# 红楼梦
-# target_url = 'https://www.polyt.cn/#/detail?productId=4724800'
-
-# 日出
-# target_url = 'https://www.polyt.cn/#/detail?productId=4294100' 
-
 # 猫 有滑块
 # target_url = 'https://www.polyt.cn/#/detail?productId=2009300'
 # target_url = 'https://www.polyt.cn/#/detail?productId=4836300'
 # target_url = 'https://www.polyt.cn/#/detail?productId=4825100'
-target_url = 'https://www.polyt.cn/#/detail?productId=4847400'
+# target_url = 'https://www.polyt.cn/#/detail?productId=4847400'
 
+# rumeng
+target_url = "https://www.polyt.cn/#/detail?productId=5276700"
+
+# test
+# target_url = "https://www.polyt.cn/#/detail?productId=5168900"
+# target_url = "https://www.polyt.cn/#/detail?productId=5280200"
 
 class Concert(object):
 
     # 类注释化
     def __init__(self):
-        self.date = 1  # 选择哪一天，比如有2021-01-01，2021-01-02，2021-01-03可选，想选01-01填1，想选01-02填2
-        self.price = [1,2,3,4]  # 买哪一档票，从贵到便宜
+        self.date = 2  # 选择哪一天，比如有2021-01-01，2021-01-02，2021-01-03可选，想选01-01填1，想选01-02填2
+        self.price = [1,2,3,4,5,6,7]  # 买哪一档票，从贵到便宜
 
         self.total_wait_short = 5   #WebDriverWait总等待时间
         self.refresh_wait_short = 0.3 #WebDriverWait刷新动作的时间
@@ -52,8 +41,8 @@ class Concert(object):
         self.total_wait_time = 5
         self.refresh_wait_time = 0.3
 
-        self.login_user = '13206009560' # 登录账号
-        self.login_pw = 'qq123456' # 登录密码
+        # self.login_user = '13206009560' # 登录账号
+        # self.login_pw = 'qq123456' # 登录密码
 
         # for test
         # self.collector = '戴飞飞' # 取票人信息
@@ -68,12 +57,13 @@ class Concert(object):
 
         self.need_click = False
 
-        port = 9222 # ???
+        port = 9058
         chrome_options = Options()
         # chrome_options.page_load_strategy = 'eager' #风险
-        chrome_options.add_experimental_option("debuggerAddress", f"127.0.0.1:{port}")  # 控制当前chrome页面
+        # 控制当前chrome页面
+        chrome_options.add_experimental_option("debuggerAddress", f"127.0.0.1:{port}")
+        chromedriver_autoinstaller.install()
         self.driver = webdriver.Chrome(options=chrome_options)
-
 
 
     # 模块 - 滑块移动
@@ -113,11 +103,11 @@ class Concert(object):
             locator = (By.CLASS_NAME, "status-text")
             while True:
                 try:
-                    WebDriverWait(self.driver, 3, 0.1).until(EC.text_to_be_present_in_element(locator,'售票中'))
+                    WebDriverWait(self.driver, 10, 0.1).until(EC.text_to_be_present_in_element(locator,'售票中'))
                     print(f"=> 获取页面成功 {datetime.datetime.now()}")
                     break
                 except Exception as e:
-                    print(f'----------- 未开始 刷新网页 {datetime.datetime.now()}')
+                    print(f'======> 未开始 刷新网页 {datetime.datetime.now()}')
                     self.driver.refresh()
             break
 
@@ -161,6 +151,11 @@ class Concert(object):
                 WebDriverWait(self.driver, self.total_wait_time, self.refresh_wait_time).until(
                             EC.presence_of_element_located((By.XPATH,"//*[contains(text(),'月')]")))
                 choiceTime_list = self.driver.find_elements(By.XPATH,"//*[contains(text(),'月')]")
+
+                # WebDriverWait(self.driver, self.total_wait_time, self.refresh_wait_time).until(
+                #             EC.presence_of_element_located((By.XPATH,"//*[contains(text(),'星期')]")))
+                # choiceTime_list = self.driver.find_elements(By.XPATH,"//*[contains(text(),'星期')]")
+
                 # for choiceTime in choiceTime_list:
                 #     print(choiceTime.text)
 
@@ -193,10 +188,11 @@ class Concert(object):
 
         while True:  # 当中有耗时的查找座位表动作，用true循环查到再进下一步
             try:
-                seat_list = WebDriverWait(self.driver, self.total_wait_long, self.refresh_wait_long).until(
+                WebDriverWait(self.driver, self.total_wait_long, self.refresh_wait_long).until(
                     EC.presence_of_element_located((By.CLASS_NAME, "price-list")))
                 botLeft_list = self.driver.find_elements(By.CLASS_NAME, "price-list")
                 print(f'=> 可选种类数: {len(botLeft_list)}')
+                time.sleep(0.5)
             except Exception as e:
                 print("=> 找不到座位信息，刷新网页")
                 self.driver.refresh()
@@ -216,6 +212,8 @@ class Concert(object):
                 print("=> 没有可选的票档，刷新")
                 self.driver.refresh()
                 continue
+            else:
+                print(self.price_color_list)
 
             # # 选择第一档的票
             # if max(self.price) > len(self.price_color_list):
@@ -232,55 +230,68 @@ class Concert(object):
             print(f"=> 找可选的位置 {self.price}档 {datetime.datetime.now()}")
             while True:  #当中有耗时的查找座位表动作，用true循环查到再进下一步
                 seatbuyerxpath = '//div[@id="seatBox"]' #找到整个座位表
+                seat_list = []
                 try:
-                    seat = WebDriverWait(self.driver, self.total_wait_short, self.refresh_wait_short).until(
+                    seat = WebDriverWait(self.driver, 30, self.refresh_wait_short).until(
                                         EC.presence_of_element_located((By.XPATH, seatbuyerxpath)))
 
                     # find seat available + related color
-                    seat_list = self.driver.find_elements(By.XPATH, '//*[@class="seat-item"]' and '//*[@class="iconfont"]' and '//li[@class!="unavailable"]')#  and f'//li[@style="color: rgb({self.price_color_list[self.price-1]});"]')
+                    for id in self.price:
+                        seat_list = seat_list + self.driver.find_elements(By.XPATH, f'//li[@style="color: rgb({self.price_color_list[id - 1]});"]')
                     print(f'=> 可选位置个数 {len(seat_list)}')
-                    
-                    if len(seat_list) == 0:
-                        time.sleep(5)
-                        self.driver.refresh()
 
-                    # if len(seat_list) >0:
+                    if len(seat_list) == 0:
+                        time.sleep(2)
+                    
+                    for id in self.price:
+                        seat_list = seat_list + self.driver.find_elements(By.XPATH, f'//li[@style="color: rgb({self.price_color_list[id - 1]});"]')
+                    print(f'=> 可选位置个数 {len(seat_list)}')
+
+                    time.sleep(3)
+                    # self.driver.refresh()
+
+                    # if len(seat_list) > 0:
                     #     for seat in seat_list:
                     #         print(seat.get_attribute('title'))
+
                 except Exception as e:
                     print('找不到位置信息，刷新网页')
                     self.driver.refresh()
-                    # continue
-                    # raise Exception("=> 错误：找不到座位信息")
-
+                    continue
+ 
                 if len(seat_list) != 0:
                     break
 
             """ Lock seat """
-            # random.shuffle(seat_list)
+            random.shuffle(seat_list)
             for seat in seat_list:
-                if len(seat.get_attribute('title'))>0:
-                    seatid = seat.get_attribute('title')
-
-                    if '实名购票' in seatid:
-                        self.need_click = True
-                        print('##### 需要点击继续购买')
-
+                print(seat)
+                try:
                     try:
+                        # if len(seat.get_attribute('title'))>0:
+                        seatid = seat.get_attribute('title')
+
+                        if '实名购票' in seatid:
+                            self.need_click = True
+                            print('##### 需要点击继续购买')
+
+
                         #这里的逻辑，点不了就跑下一个去点！
                         seat.click()
                         print('=> 选择座位 ' + seatid)
 
-                        # if 'xuanzhong' in seat.get_attribute('class'):
+                        # if 'icon-xuanzhong' in seat.get_attribute('class'):
                         #     seat.click()
                         #     print('=> 选择座位 ' + seatid)
                         # else:
                         #     print('=> 已选' + seatid)
                     except:
-                        print(f"选座失败 274行")
-                        continue
+                        print(f"选座失败 296行")
+                        pass
+                except:
+                    pass
 
-                    break
+                break
 
             """ Find right bottom corner """
             if self.driver.title.find("确认订单") == 0:
@@ -288,11 +299,11 @@ class Concert(object):
 
             try:
                 print('=> 已选座位，等结账框')
-                WebDriverWait(self.driver,15,0.3).until(EC.presence_of_element_located((By.CLASS_NAME, "el-drawer__open")))
+                WebDriverWait(self.driver,5,0.3).until(EC.presence_of_element_located((By.CLASS_NAME, "el-drawer__open")))
             except:
                 if not self.driver.title.find('确认订单') == 0:
                     print('已选座位，没有结账框，刷新网页!')
-                    self.driver.refresh()
+                    # self.driver.refresh()
                 continue
 
             """ Count times to click buy key """
@@ -408,24 +419,25 @@ class Concert(object):
 
             break
 
-        
+
 
 if __name__ == '__main__':
-    startTime = datetime.datetime(2022, 11, 10, 11, 59, 59, 40)  #定时功能：2022-11-10 11:59:40秒开抢
-    print('=> 抢票程序还未开始...')
-    con = Concert()             #具体如果填写请查看类中的初始化函数
+    # 定时功能：2022-11-10 11:59:40秒开抢
+    startTime = datetime.datetime(2023, 4, 11, 11, 59, 59, 30)
+
+    con = Concert()
     con.driver.get(target_url)
 
     while datetime.datetime.now() < startTime:
         time.sleep(0.5)
+        print(datetime.datetime.now())
 
     print('=> 开始进入抢票 %s' % datetime.datetime.now())
 
     start_time = time.time()
-    con = Concert()             #具体如果填写请查看类中的初始化函数
     con.driver.get(target_url)
-    con.prepare()               #判别是否进入了售票页面，
-    # con.login()                 #登录
+    con.prepare() # 判别是否进入了售票页面，
+    # con.login()
     con.choose_ticket()
     con.check_price_list()
     while True:
@@ -443,7 +455,6 @@ if __name__ == '__main__':
         con.driver.refresh()
         # con.driver.back()
 
-
         # try:
         #     WebDriverWait(con.driver, 3, 0.1).until(EC.title_contains("订单支付"))
         #     print('！！！！！快去付钱')
@@ -457,10 +468,6 @@ if __name__ == '__main__':
     print(f'总耗时{end_time}s')
 
 
-            
-
- 
-        
 
 
 
